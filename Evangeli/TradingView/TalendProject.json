@@ -1,0 +1,55 @@
+{
+  "version": 6,
+  "entities": [
+    {
+      "entity": {
+        "type": "Project",
+        "id": "faa7db29-ed1b-4f86-a7d6-49c88aa8a919",
+        "name": "TradingView WebHook"
+      },
+      "children": [
+        {
+          "entity": {
+            "type": "Request",
+            "method": {
+              "requestBody": true,
+              "link": "http://tools.ietf.org/html/rfc7231#section-4.3.3",
+              "name": "POST"
+            },
+            "body": {
+              "formBody": {
+                "overrideContentType": true,
+                "encoding": "application/x-www-form-urlencoded",
+                "items": []
+              },
+              "bodyType": "Text",
+              "textBody": "{\n  \"phassphrase\":\"abcdefg\",\n  \"time\":\"2024-04-12T07:06:13Z\",\n  \"exchange\":\"BINANCE\",\n  \"ticker\":\"BTCUSDT\",\n  \"bar\":\n  {\n    \"time\":\"2024-04-12T07:06:13Z\",\n    \"open\":\"70907.76\",\n    \"high\":\"70907.76\",\n    \"low\":\"70907.76\",\n    \"close\":\"70907.76\",\n    \"volume\":\"0.00055\"\n  },\n  \"strategy\":{\n    \"position_size\":\"{{strategy.position_size}}\",\n    \"order_action\":\"{{strategy.order.action}}\",\n    \"order_contracts\":\"{{strategy.order.contracts}}\",\n    \"order_price\":\"{{strategy.order.price}}\",\n    \"order_id\":\"{{strategy.order.id}}\",\n    \"market_position\":\"{{strategy.market_position}}\",\n    \"market_position_size\":\"{{strategy.market_position_size}}\",\n    \"prev_market_position\":\"{{strategy.prev_market_position}}\",\n    \"prev_market_position_size\":\"{{strategy.prev_market_position_size}}\"\n  }\n}"
+            },
+            "uri": {
+              "query": {
+                "delimiter": "&",
+                "items": []
+              },
+              "scheme": {
+                "secure": true,
+                "name": "https",
+                "version": "V11"
+              },
+              "host": "9dbe-114-43-155-82.ngrok-free.app",
+              "path": "/webhook"
+            },
+            "id": "925aeb99-521b-4c24-a9bf-49118ea78f00",
+            "name": "TradingView Dummy Webhook",
+            "headers": [
+              {
+                "enabled": true,
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
