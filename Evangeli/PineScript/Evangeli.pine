@@ -4,7 +4,7 @@
 // Reference : https://www.youtube.com/watch?v=gfEqy4uGe8c
 
 //@version=5
-strategy("ADX", overlay=true, default_qty_type = strategy.cash, default_qty_value = 1000, calc_on_every_tick = true )
+strategy(title = "EMA|ADX|StochRSI|ATR",  shorttitle = "EASA", initial_capital = 1000, overlay=true, currency = currency.USD , default_qty_type = strategy.cash, default_qty_value = 1000, calc_on_every_tick = true, pyramiding = 0 )
 
 // Inputs
 var GEN = "General Settings"
@@ -26,7 +26,7 @@ if profitTargetMultiplier3 < profitTargetMultiplier2
 var BacktestInterval = "Back Test Interval"
 useDateFilter = input.bool(true, title="Enable Backtest Time Interval", group=BacktestInterval)
 backtestStartDate = input.time(timestamp("01 Jan 2024 00:00:00 UTC+8"), title="Start Time", group=BacktestInterval)
-backtestEndDate = input.time(timestamp("01 Mar 2024 00:00:00 UTC+8"), title="End Time", group=BacktestInterval)
+backtestEndDate = input.time(timestamp("01 May 2024 00:00:00 UTC+8"), title="End Time", group=BacktestInterval)
 inTradeWindow = not useDateFilter or (time >= backtestStartDate and time < backtestEndDate)
 
 var EMA = "EMA Settings"
@@ -34,8 +34,8 @@ emaLength = input.int(200, title="EMA Length   ", inline = "11", group = E
 string emaTimeFrame = input.timeframe(defval = "240", title = "EMA Timeframe", inline = "21", group = EMA)
 
 var ADX = "ADX & DI Settings"
-adxLength = input(14, title="ADX Length", inline = "11", group = ADX)
-adxLensing = input.int(14, title="ADX Smoothing", minval=1, maxval=50, inline = "21", group = ADX)
+adxLength = input(8, title="ADX Length", inline = "11", group = ADX)
+adxLensing = input.int(20, title="ADX Smoothing", minval=1, maxval=50, inline = "21", group = ADX)
 adxLevel = input(50, title="ADX Level for Filter", inline = "31", group = ADX)
 
 var RSI = "Stoch RSI Settings"
@@ -108,44 +108,61 @@ plotshape(ShortCondition, title="Puts Label", color=color.new(color.red, 25),
      style=useTextLabels ? shape.labeldown : shape.triangledown,
      text="Puts", location=location.abovebar)
 
-// Define Long entry points
+
 var float longRiskAmount = na
 var float longTakeProfitPrice1 = na
 var float longTakeProfitPrice2 = na
 var float longTakeProfitPrice3 = na
 var float longStopLossPrice = na
-if inTradeWindow and LongCondition and enableLong
-    if strategy.position_size == 0
-        longRiskAmount := close - atrLowerbound
-        longTakeProfitPrice1 := close + ( longRiskAmount * profitTargetMultiplier1 )
-        longTakeProfitPrice2 := close + ( longRiskAmount * profitTargetMultiplier2 )
-        longTakeProfitPrice3 := close + ( longRiskAmount * profitTargetMultiplier3 )
-        longStopLossPrice := atrLowerbound
+
+var float shortRiskAmount = na
+var float shortTakeProfitPrice1 = na
+var float shortTakeProfitPrice2 = na
+var float shortTakeProfitPrice3 = na
+var float shortStopLossPrice = na
+
+// Define Long entry points
+// strategy.position_size <= 0 for avoiding continous Buy condition
+if inTradeWindow and LongCondition and enableLong and strategy.position_size <= 0
+    // if strategy.position_size == 0
+    longRiskAmount := close - atrLowerbound
+    longTakeProfitPrice1 := close + ( longRiskAmount * profitTargetMultiplier1 )
+    longTakeProfitPrice2 := close + ( longRiskAmount * profitTargetMultiplier2 )
+    longTakeProfitPrice3 := close + ( longRiskAmount * profitTargetMultiplier3 )
+    longStopLossPrice := atrLowerbound
+
     strategy.entry("Long", strategy.long, 1)
     strategy.exit("Long SL / TP1", from_entry = "Long", limit = longTakeProfitPrice1, stop = longStopLossPrice, qty_percent = 25)
     strategy.exit("Long SL / TP2", from_entry = "Long", limit = longTakeProfitPrice2, stop = longStopLossPrice, qty_percent = 25)
     strategy.exit("Long SL / TP3", from_entry = "Long", limit = longTakeProfitPrice3, stop = longStopLossPrice)
 
-if low <= longStopLossPrice
-    longRiskAmount := na
-    longStopLossPrice := na
-    longTakeProfitPrice1 := na
-    longTakeProfitPrice2 := na
-    longTakeProfitPrice3 := na
+    shortRiskAmount := na
+    shortTakeProfitPrice1 := na
+    shortTakeProfitPrice2 := na
+    shortTakeProfitPrice3 := na
+    shortStopLossPrice := na
 
-if high >= longTakeProfitPrice1
-    longTakeProfitPrice1 := na
+if ta.change(strategy.position_size) < 0 and ta.change(strategy.closedtrades) > 0
+    if low <= longStopLossPrice
+        longRiskAmount := na
+        longStopLossPrice := na
+        longTakeProfitPrice1 := na
+        longTakeProfitPrice2 := na
+        longTakeProfitPrice3 := na
 
-if high >= longTakeProfitPrice2
-    longTakeProfitPrice1 := na
-    longTakeProfitPrice2 := na
+    if high >= longTakeProfitPrice1
+        longTakeProfitPrice1 := na
 
-if high >= longTakeProfitPrice3
-    longRiskAmount := na
-    longStopLossPrice := na
-    longTakeProfitPrice1 := na
-    longTakeProfitPrice2 := na
-    longTakeProfitPrice3 := na
+    if high >= longTakeProfitPrice2
+        longTakeProfitPrice1 := na
+        longTakeProfitPrice2 := na
+        
+    if high >= longTakeProfitPrice3
+        longRiskAmount := na
+        longStopLossPrice := na
+        longTakeProfitPrice1 := na
+        longTakeProfitPrice2 := na
+        longTakeProfitPrice3 := na
 
 longAvgPrice        = plot(longStopLossPrice + longRiskAmount,    "Long AveragePrice", color.green, style = plot.style_circles, offset = 1)
 longStopLossLine    = plot(longStopLossPrice,    "Long SL",  color.red,   style = plot.style_circles, offset = 1)
@@ -158,43 +175,46 @@ fill(longAvgPrice, longTakeProfitLine2, color = color.new(color.green,80))
 fill(longAvgPrice, longTakeProfitLine3, color = color.new(color.green,80))
 
 // Define Short entry points
-var float shortRiskAmount = na
-var float shortTakeProfitPrice1 = na
-var float shortTakeProfitPrice2 = na
-var float shortTakeProfitPrice3 = na
-var float shortStopLossPrice = na
-if inTradeWindow and ShortCondition and enableShort
-    if strategy.position_size == 0
-        shortRiskAmount := atrUpperbound - close
-        shortTakeProfitPrice1 := close - ( shortRiskAmount * profitTargetMultiplier1 )
-        shortTakeProfitPrice2 := close - ( shortRiskAmount * profitTargetMultiplier2 )
-        shortTakeProfitPrice3 := close - ( shortRiskAmount * profitTargetMultiplier3 )
-        shortStopLossPrice := atrUpperbound
+if inTradeWindow and ShortCondition and enableShort and strategy.position_size >= 0
+    // if strategy.position_size == 0
+    shortRiskAmount := atrUpperbound - close
+    shortTakeProfitPrice1 := close - ( shortRiskAmount * profitTargetMultiplier1 )
+    shortTakeProfitPrice2 := close - ( shortRiskAmount * profitTargetMultiplier2 )
+    shortTakeProfitPrice3 := close - ( shortRiskAmount * profitTargetMultiplier3 )
+    shortStopLossPrice := atrUpperbound
+
     strategy.entry("Short", strategy.short, 1)
     strategy.exit("Short SL / TP1", from_entry = "Short", limit = shortTakeProfitPrice1, stop = shortStopLossPrice, qty_percent = 25)
     strategy.exit("Short SL / TP2", from_entry = "Short", limit = shortTakeProfitPrice2, stop = shortStopLossPrice, qty_percent = 25)
     strategy.exit("Short SL / TP3", from_entry = "Short", limit = shortTakeProfitPrice3, stop = shortStopLossPrice)
 
-if high >= shortStopLossPrice
-    shortRiskAmount := na
-    shortStopLossPrice := na
-    shortTakeProfitPrice1 := na
-    shortTakeProfitPrice2 := na
-    shortTakeProfitPrice3 := na
+    longRiskAmount := na
+    longTakeProfitPrice1 := na
+    longTakeProfitPrice2 := na
+    longTakeProfitPrice3 := na
+    longStopLossPrice := na
 
-if low <= shortTakeProfitPrice1
-    shortTakeProfitPrice1 := na
+if ta.change(strategy.position_size) > 0 and ta.change(strategy.closedtrades) > 0
+    if high >= shortStopLossPrice
+        shortRiskAmount := na
+        shortStopLossPrice := na
+        shortTakeProfitPrice1 := na
+        shortTakeProfitPrice2 := na
+        shortTakeProfitPrice3 := na
 
-if low <= shortTakeProfitPrice2
-    shortTakeProfitPrice1 := na
-    shortTakeProfitPrice2 := na
+    if low <= shortTakeProfitPrice1
+        shortTakeProfitPrice1 := na
 
-if low <= shortTakeProfitPrice3
-    shortRiskAmount := na
-    shortStopLossPrice := na
-    shortTakeProfitPrice1 := na
-    shortTakeProfitPrice2 := na
-    shortTakeProfitPrice3 := na
+    if low <= shortTakeProfitPrice2
+        shortTakeProfitPrice1 := na
+        shortTakeProfitPrice2 := na
+
+    if low <= shortTakeProfitPrice3
+        shortRiskAmount := na
+        shortStopLossPrice := na
+        shortTakeProfitPrice1 := na
+        shortTakeProfitPrice2 := na
+        shortTakeProfitPrice3 := na
 
 shortAvgPrice        = plot(shortStopLossPrice - shortRiskAmount,    "Short AveragePrice", color.green, style = plot.style_circles, offset = 1)
 shortStopLossLine    = plot(shortStopLossPrice,    "Short SL",  color.red,   style = plot.style_circles, offset = 1)
@@ -207,9 +227,11 @@ fill(shortAvgPrice, shortTakeProfitLine1, color = color.new(color.green, 80))
 fill(shortAvgPrice, shortTakeProfitLine2, color = color.new(color.green, 80))
 fill(shortAvgPrice, shortTakeProfitLine3, color = color.new(color.green, 80))
 
-// plotchar(strategy.position_avg_price, "Debug : strategy.position_avg_price",  "", location = location.top)
-// plotchar(strategy.position_size,      "Debug : strategy.position_size",       "", location = location.top)
-// plotchar(strategy.closedtrades,       "Debug : strategy.closedtrades",        "", location = location.top)
+// plotchar(strategy.position_avg_price,       "Debug : strategy.position_avg_price",       "", location = location.top)
+// plotchar(strategy.position_size,            "Debug : strategy.position_size",            "", location = location.top)
+// plotchar(strategy.opentrades,               "Debug : strategy.opentrades",             "", location = location.top)
+// plotchar(strategy.closedtrades,             "Debug : strategy.closedtrades",             "", location = location.top)
+// plotchar(ta.change(strategy.position_size), "Debug : ta.change(strategy.position_size)", "", location = location.top)
 
 // plotchar(longRiskAmount,              "Debug : longRiskAmount",               "", location = location.top)
 // plotchar(longTakeProfitPrice1,        "Debug : longTakeProfitPrice11",        "", location = location.top)
@@ -217,14 +239,18 @@ fill(shortAvgPrice, shortTakeProfitLine3, color = color.new(color.green, 80))
 // plotchar(longTakeProfitPrice3,        "Debug : longTakeProfitPrice13",        "", location = location.top)
 // plotchar(longStopLossPrice,           "Debug : longStopLossPrice",            "", location = location.top)
 
-// plotchar(shortRiskAmount,             "Debug : shortRiskAmount",               "", location = location.top)
-// plotchar(shortTakeProfitPrice1,       "Debug : shortTakeProfitPrice11",        "", location = location.top)
-// plotchar(shortTakeProfitPrice2,       "Debug : shortTakeProfitPrice12",        "", location = location.top)
-// plotchar(shortTakeProfitPrice3,       "Debug : shortTakeProfitPrice13",        "", location = location.top)
-// plotchar(shortStopLossPrice,          "Debug : shortStopLossPrice",            "", location = location.top)
+// plotchar(shortRiskAmount,             "Debug : shortRiskAmount",              "", location = location.top)
+// plotchar(shortTakeProfitPrice1,       "Debug : shortTakeProfitPrice11",       "", location = location.top)
+// plotchar(shortTakeProfitPrice2,       "Debug : shortTakeProfitPrice12",       "", location = location.top)
+// plotchar(shortTakeProfitPrice3,       "Debug : shortTakeProfitPrice13",       "", location = location.top)
+// plotchar(shortStopLossPrice,          "Debug : shortStopLossPrice",           "", location = location.top)
+// plotchar(ema,                         "Debug : ema",                          "", location = location.top)
+// plotchar(adx_orig,                    "Debug : adx_orig",                     "", location = location.top)
+// plotchar(rsiK,                        "Debug : rsiK",                         "", location = location.top)
+// plotchar(rsiD,                        "Debug : rsiD",                         "", location = location.top)
 
 ///// EMA
-// plot(ema, title = "EMA", color = color.blue )
+// plot(ema, title = "EMA", color = color.rgb(185, 227, 16) )
 
 ///// ADX and DI
 // plot(diPlus, title = "DI+", color = color.green)
@@ -254,3 +280,13 @@ fill(shortAvgPrice, shortTakeProfitLine3, color = color.new(color.green, 80))
 //     f_fillCell(Table, 0, 0, atr, 'ATR: ')
 //     f_fillCell(Table, 1, 0, atrUpperbound, 'H: ')
 //     f_fillCell(Table, 2, 0, atrLowerbound, 'L: ')
+
+
+// //@variable The length of the ATR calculation.
+// atrPeriod = input(10, "ATR Length")
+// //@variable The ATR multiplier.
+// factor = input.float(3.0, "Factor", step = 0.01)
+// // Get the direction of the SuperTrend.
+// [_, direction] = ta.supertrend(factor, atrPeriod)
+// if ta.change(direction) > 0
+//     strategy.close_all()
