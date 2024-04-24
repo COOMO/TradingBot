@@ -4,7 +4,10 @@
 // Reference : https://www.youtube.com/watch?v=gfEqy4uGe8c
 
 //@version=5
-strategy(title = "EMA|ADX|StochRSI|ATR",  shorttitle = "EASA", initial_capital = 1000, overlay=true, currency = currency.USD , default_qty_type = strategy.cash, default_qty_value = 1000, calc_on_every_tick = true, pyramiding = 0 )
+
+// 23.0
+strategy(title = "EMA|ADX|StochRSI|ATR",  shorttitle = "EASA", initial_capital = 1000, overlay=true, currency = currency.USD , default_qty_type = strategy.percent_of_equity, default_qty_value = 100, calc_on_every_tick = true, pyramiding = 0 )
+strategy.risk.allow_entry_in(strategy.direction.all)
 
 // Inputs
 var GEN = "General Settings"
@@ -98,16 +101,8 @@ shortCondition2 = adx_orig > adxLevel
 shortCondition3 = ta.crossunder(rsiK, rsiD) and rsiK > 80  // Entering at overbought conditions
 ShortCondition = (shortCondition1 and shortCondition2 and shortCondition3)
 
-plotshape(LongCondition, title="Calls Label", color=color.new(color.green, 25), 
-     textcolor=useTextLabels ? color.white : color.new(color.white, 100),
-     style=useTextLabels ? shape.labelup : shape.triangleup,
-     text="Calls", location=location.belowbar)
-     
-plotshape(ShortCondition, title="Puts Label", color=color.new(color.red, 25),
-     textcolor=useTextLabels ? color.white : color.new(color.white, 100),
-     style=useTextLabels ? shape.labeldown : shape.triangledown,
-     text="Puts", location=location.abovebar)
-
+plotshape( LongCondition and enableLong, title="Calls Label", color=color.new(color.green, 25), textcolor=useTextLabels ? color.white : color.new(color.white, 100), style=useTextLabels ? shape.labelup : shape.triangleup,     text="Calls", location=location.belowbar)     
+plotshape(ShortCondition and enableShort, title="Puts Label", color=color.new(color.red, 25),   textcolor=useTextLabels ? color.white : color.new(color.white, 100), style=useTextLabels ? shape.labeldown : shape.triangledown, text="Puts",  location=location.abovebar)
 
 var float longRiskAmount = na
 var float longTakeProfitPrice1 = na
@@ -227,27 +222,27 @@ fill(shortAvgPrice, shortTakeProfitLine1, color = color.new(color.green, 80))
 fill(shortAvgPrice, shortTakeProfitLine2, color = color.new(color.green, 80))
 fill(shortAvgPrice, shortTakeProfitLine3, color = color.new(color.green, 80))
 
-// plotchar(strategy.position_avg_price,       "Debug : strategy.position_avg_price",       "", location = location.top)
-// plotchar(strategy.position_size,            "Debug : strategy.position_size",            "", location = location.top)
-// plotchar(strategy.opentrades,               "Debug : strategy.opentrades",             "", location = location.top)
-// plotchar(strategy.closedtrades,             "Debug : strategy.closedtrades",             "", location = location.top)
-// plotchar(ta.change(strategy.position_size), "Debug : ta.change(strategy.position_size)", "", location = location.top)
+plotchar(strategy.position_avg_price,       "Debug : strategy.position_avg_price",       "", location = location.top)
+plotchar(strategy.position_size,            "Debug : strategy.position_size",            "", location = location.top)
+plotchar(strategy.opentrades,               "Debug : strategy.opentrades",             "", location = location.top)
+plotchar(strategy.closedtrades,             "Debug : strategy.closedtrades",             "", location = location.top)
+plotchar(ta.change(strategy.position_size), "Debug : ta.change(strategy.position_size)", "", location = location.top)
 
-// plotchar(longRiskAmount,              "Debug : longRiskAmount",               "", location = location.top)
-// plotchar(longTakeProfitPrice1,        "Debug : longTakeProfitPrice11",        "", location = location.top)
-// plotchar(longTakeProfitPrice2,        "Debug : longTakeProfitPrice12",        "", location = location.top)
-// plotchar(longTakeProfitPrice3,        "Debug : longTakeProfitPrice13",        "", location = location.top)
-// plotchar(longStopLossPrice,           "Debug : longStopLossPrice",            "", location = location.top)
+plotchar(longRiskAmount,              "Debug : longRiskAmount",               "", location = location.top)
+plotchar(longTakeProfitPrice1,        "Debug : longTakeProfitPrice11",        "", location = location.top)
+plotchar(longTakeProfitPrice2,        "Debug : longTakeProfitPrice12",        "", location = location.top)
+plotchar(longTakeProfitPrice3,        "Debug : longTakeProfitPrice13",        "", location = location.top)
+plotchar(longStopLossPrice,           "Debug : longStopLossPrice",            "", location = location.top)
 
-// plotchar(shortRiskAmount,             "Debug : shortRiskAmount",              "", location = location.top)
-// plotchar(shortTakeProfitPrice1,       "Debug : shortTakeProfitPrice11",       "", location = location.top)
-// plotchar(shortTakeProfitPrice2,       "Debug : shortTakeProfitPrice12",       "", location = location.top)
-// plotchar(shortTakeProfitPrice3,       "Debug : shortTakeProfitPrice13",       "", location = location.top)
-// plotchar(shortStopLossPrice,          "Debug : shortStopLossPrice",           "", location = location.top)
-// plotchar(ema,                         "Debug : ema",                          "", location = location.top)
-// plotchar(adx_orig,                    "Debug : adx_orig",                     "", location = location.top)
-// plotchar(rsiK,                        "Debug : rsiK",                         "", location = location.top)
-// plotchar(rsiD,                        "Debug : rsiD",                         "", location = location.top)
+plotchar(shortRiskAmount,             "Debug : shortRiskAmount",              "", location = location.top)
+plotchar(shortTakeProfitPrice1,       "Debug : shortTakeProfitPrice11",       "", location = location.top)
+plotchar(shortTakeProfitPrice2,       "Debug : shortTakeProfitPrice12",       "", location = location.top)
+plotchar(shortTakeProfitPrice3,       "Debug : shortTakeProfitPrice13",       "", location = location.top)
+plotchar(shortStopLossPrice,          "Debug : shortStopLossPrice",           "", location = location.top)
+plotchar(ema,                         "Debug : ema",                          "", location = location.top)
+plotchar(adx_orig,                    "Debug : adx_orig",                     "", location = location.top)
+plotchar(rsiK,                        "Debug : rsiK",                         "", location = location.top)
+plotchar(rsiD,                        "Debug : rsiD",                         "", location = location.top)
 
 ///// EMA
 // plot(ema, title = "EMA", color = color.rgb(185, 227, 16) )
