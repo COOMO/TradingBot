@@ -5,8 +5,8 @@
 
 //@version=5
 
-// 23.0
-strategy(title = "EMA|ADX|StochRSI|ATR",  shorttitle = "EASA", initial_capital = 1000, overlay=true, currency = currency.USD , default_qty_type = strategy.percent_of_equity, default_qty_value = 100, calc_on_every_tick = true, pyramiding = 0 )
+// ver.25
+strategy(title = "EMA|ADX|StochRSI|ATR",  shorttitle = "EASA", initial_capital = 1000, overlay=true,default_qty_type = strategy.percent_of_equity, default_qty_value = 100, calc_on_every_tick = true, pyramiding = 0 )
 strategy.risk.allow_entry_in(strategy.direction.all)
 
 // Inputs
@@ -14,9 +14,12 @@ var GEN = "General Settings"
 enableLong = input(true, title="Enable Long?", group=GEN)
 enableShort = input(true, title="Enable Short?", group=GEN)
 useTextLabels = input(true, title="Display Call & Put Label?", group=GEN)
-profitTargetMultiplier1 = input.float(1.0, title="Profit Target Multiplier 1", minval=0.1, group = GEN)
-profitTargetMultiplier2 = input.float(2.0, title="Profit Target Multiplier 2", minval=0.1, group = GEN)
-profitTargetMultiplier3 = input.float(4.0, title="Profit Target Multiplier 3", minval=0.1, group = GEN)
+
+profitTargetMultiplier1 = input.float(1.0, title="Profit Target Multiplier 1", minval=0.1, inline = "11", group = GEN)
+takeProfitPercentage1 = input.int(25, title="TP(%)", minval=0, inline = "11", group = GEN)
+profitTargetMultiplier2 = input.float(2.0, title="Profit Target Multiplier 2", minval=0.1, inline = "22", group = GEN)
+takeProfitPercentage2 = input.int(25, title="TP(%)", minval=0, inline = "22", group = GEN)
+profitTargetMultiplier3 = input.float(4.0, title="Profit Target Multiplier 3", minval=0.1, inline = "33", group = GEN)
 
 // Ensure that profitTargetMultiplier2 is greater than profitTargetMultiplier1
 if profitTargetMultiplier2 < profitTargetMultiplier1
@@ -116,6 +119,8 @@ var float shortTakeProfitPrice2 = na
 var float shortTakeProfitPrice3 = na
 var float shortStopLossPrice = na
 
+position_size = strategy.equity
+
 // Define Long entry points
 // strategy.position_size <= 0 for avoiding continous Buy condition
 if inTradeWindow and LongCondition and enableLong and strategy.position_size <= 0
@@ -126,9 +131,9 @@ if inTradeWindow and LongCondition and enableLong and strategy.position_size <= 
     longTakeProfitPrice3 := close + ( longRiskAmount * profitTargetMultiplier3 )
     longStopLossPrice := atrLowerbound
 
-    strategy.entry("Long", strategy.long, 1)
-    strategy.exit("Long SL / TP1", from_entry = "Long", limit = longTakeProfitPrice1, stop = longStopLossPrice, qty_percent = 25)
-    strategy.exit("Long SL / TP2", from_entry = "Long", limit = longTakeProfitPrice2, stop = longStopLossPrice, qty_percent = 25)
+    strategy.entry("Long", strategy.long)
+    strategy.exit("Long SL / TP1", from_entry = "Long", limit = longTakeProfitPrice1, stop = longStopLossPrice, qty_percent = takeProfitPercentage1)
+    strategy.exit("Long SL / TP2", from_entry = "Long", limit = longTakeProfitPrice2, stop = longStopLossPrice, qty_percent = takeProfitPercentage2)
     strategy.exit("Long SL / TP3", from_entry = "Long", limit = longTakeProfitPrice3, stop = longStopLossPrice)
 
     shortRiskAmount := na
@@ -178,9 +183,9 @@ if inTradeWindow and ShortCondition and enableShort and strategy.position_size >
     shortTakeProfitPrice3 := close - ( shortRiskAmount * profitTargetMultiplier3 )
     shortStopLossPrice := atrUpperbound
 
-    strategy.entry("Short", strategy.short, 1)
-    strategy.exit("Short SL / TP1", from_entry = "Short", limit = shortTakeProfitPrice1, stop = shortStopLossPrice, qty_percent = 25)
-    strategy.exit("Short SL / TP2", from_entry = "Short", limit = shortTakeProfitPrice2, stop = shortStopLossPrice, qty_percent = 25)
+    strategy.entry("Short", strategy.short)
+    strategy.exit("Short SL / TP1", from_entry = "Short", limit = shortTakeProfitPrice1, stop = shortStopLossPrice, qty_percent = takeProfitPercentage1)
+    strategy.exit("Short SL / TP2", from_entry = "Short", limit = shortTakeProfitPrice2, stop = shortStopLossPrice, qty_percent = takeProfitPercentage2)
     strategy.exit("Short SL / TP3", from_entry = "Short", limit = shortTakeProfitPrice3, stop = shortStopLossPrice)
 
     longRiskAmount := na
@@ -224,8 +229,9 @@ fill(shortAvgPrice, shortTakeProfitLine3, color = color.new(color.green, 80))
 
 plotchar(strategy.position_avg_price,       "Debug : strategy.position_avg_price",       "", location = location.top)
 plotchar(strategy.position_size,            "Debug : strategy.position_size",            "", location = location.top)
-plotchar(strategy.opentrades,               "Debug : strategy.opentrades",             "", location = location.top)
+plotchar(strategy.opentrades,               "Debug : strategy.opentrades",               "", location = location.top)
 plotchar(strategy.closedtrades,             "Debug : strategy.closedtrades",             "", location = location.top)
+plotchar(strategy.equity,                   "Debug : strategy.equity",                   "", location = location.top)
 plotchar(ta.change(strategy.position_size), "Debug : ta.change(strategy.position_size)", "", location = location.top)
 
 plotchar(longRiskAmount,              "Debug : longRiskAmount",               "", location = location.top)

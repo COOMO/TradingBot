@@ -6,37 +6,43 @@ import logging
 import requests
 import os
 
-from binance.client import Client
-from binance.exceptions import BinanceAPIException
-from binance.enums import *
-
 load_dotenv()  # take environment variables from .env.
 LINE_NOTIFY_TOKEN = os.getenv("LINE_NOTIFY_TOKEN")
 LINE_NOTIFY_URL = os.getenv("LINE_NOTIFY_URL")
 
 # Initialize the Binance Client
-API_KEY = os.getenv("BINANCE_API_KEY")
-API_SECRET = os.getenv("BINANCE_API_SECRET")
-TESTNET = os.getenv("BINANCE_TESTNET", "True").lower() in ["true", "1"]
+EXCHANGE_NAME = os.getenv("EXCHANGE_NAME", "binance").lower()
+
+if EXCHANGE_NAME == "binance":
+    from binance.client import Client
+    from binance.exceptions import BinanceAPIException
+    from binance.enums import *
+elif EXCHANGE_NAME == "bitget":
+    from bitget.client import Client
+
+API_KEY = os.getenv("BITGET_API_KEY")
+API_SECRET = os.getenv("BITGET_API_SECRET")
+API_PASSPHRASE = os.getenv("BITGET_API_PASSPHRASE")
+# TESTNET = os.getenv("BINANCE_TESTNET", "True").lower() in ["true", "1"]
 
 FIX_USDT_AMOUNT = float(os.getenv("FIX_USDT_AMOUNT", "250"))  # Default is 250
 LEVERAGE = int(os.getenv("LEVERAGE", "1"))  # Default leverage is 1
 
 
-client = Client(API_KEY, API_SECRET, testnet=TESTNET)
-logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# client = Client(API_KEY, API_SECRET, testnet=TESTNET)
+# logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-try:
-    client.ping()
-    time_res = client.get_server_time()
-    account_info = client.get_account_status()
-    exangeInfo = client.get_exchange_info()
-    symbolInfo = client.get_symbol_info('BNBBTC')
-    tickerInfo = client.get_all_tickers()
-    info = client.get_account_snapshot(type='FUTURES')
-except BinanceAPIException as e:
-    logging.error(f"Error: {e}")
-    raise HTTPException(status_code=400, detail=f"Error: {e}")
+# try:
+#     client.ping()
+#     time_res = client.get_server_time()
+#     account_info = client.get_account_status()
+#     exangeInfo = client.get_exchange_info()
+#     symbolInfo = client.get_symbol_info('BNBBTC')
+#     tickerInfo = client.get_all_tickers()
+#     info = client.get_account_snapshot(type='FUTURES')
+# except BinanceAPIException as e:
+#     logging.error(f"Error: {e}")
+#     raise HTTPException(status_code=400, detail=f"Error: {e}")
 
 # 定義 BaseModel 結構，webhook 結構必須要對映，否則會報錯
 class Bar(BaseModel):
