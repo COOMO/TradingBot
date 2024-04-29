@@ -18,15 +18,24 @@ if EXCHANGE_NAME == "binance":
     from binance.exceptions import BinanceAPIException
     from binance.enums import *
 elif EXCHANGE_NAME == "bitget":
-    from bitget.client import Client
+    from bitget.v2.mix import order_api as maxOrderApi
+    from bitget.v2.mix import account_api as maxAccountApi
+    from bitget.v2.mix import market_api as maxMarketApi
+    from bitget.exceptions import BitgetAPIException
 
-API_KEY = os.getenv("BITGET_API_KEY")
-API_SECRET = os.getenv("BITGET_API_SECRET")
-API_PASSPHRASE = os.getenv("BITGET_API_PASSPHRASE")
-# TESTNET = os.getenv("BINANCE_TESTNET", "True").lower() in ["true", "1"]
+# API_KEY = os.getenv("BITGET_API_KEY")
+# API_SECRET = os.getenv("BITGET_API_SECRET")
+# API_PASSPHRASE = os.getenv("BITGET_API_PASSPHRASE")
+# # TESTNET = os.getenv("BINANCE_TESTNET", "True").lower() in ["true", "1"]
 
-FIX_USDT_AMOUNT = float(os.getenv("FIX_USDT_AMOUNT", "250"))  # Default is 250
-LEVERAGE = int(os.getenv("LEVERAGE", "1"))  # Default leverage is 1
+# FIX_USDT_AMOUNT = float(os.getenv("FIX_USDT_AMOUNT", "250"))  # Default is 250
+# LEVERAGE = int(os.getenv("LEVERAGE", "1"))  # Default leverage is 1
+
+# maxMarketApi = maxMarketApi.MarketApi(API_KEY, API_SECRET, API_PASSPHRASE)
+# params = {}
+# params["symbol"] = "BTCUSDT_UMCBL"
+# params["productType"] = "SUSDT-FUTURES"
+# data = maxMarketApi.tickers(params)
 
 
 # client = Client(API_KEY, API_SECRET, testnet=TESTNET)

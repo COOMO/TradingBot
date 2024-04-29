@@ -5,7 +5,7 @@
 
 //@version=5
 
-// ver.25
+// ver.27
 strategy(title = "EMA|ADX|StochRSI|ATR",  shorttitle = "EASA", initial_capital = 1000, overlay=true,default_qty_type = strategy.percent_of_equity, default_qty_value = 100, calc_on_every_tick = true, pyramiding = 0 )
 strategy.risk.allow_entry_in(strategy.direction.all)
 
@@ -28,6 +28,10 @@ if profitTargetMultiplier2 < profitTargetMultiplier1
 // Ensure that profitTargetMultiplier3 is greater than profitTargetMultiplier2
 if profitTargetMultiplier3 < profitTargetMultiplier2
     profitTargetMultiplier3 := profitTargetMultiplier2
+
+// avoiding situation : initial_capital : < 1,000,000 and takeProfitPercentage1 : 75, takeProfitPercentage2 : 25, there shoule not be remaining position to be clsed on TP3 
+if takeProfitPercentage1 + takeProfitPercentage2 == 100
+    takeProfitPercentage2 := takeProfitPercentage2 + 1
 
 var BacktestInterval = "Back Test Interval"
 useDateFilter = input.bool(true, title="Enable Backtest Time Interval", group=BacktestInterval)
@@ -104,8 +108,8 @@ shortCondition2 = adx_orig > adxLevel
 shortCondition3 = ta.crossunder(rsiK, rsiD) and rsiK > 80  // Entering at overbought conditions
 ShortCondition = (shortCondition1 and shortCondition2 and shortCondition3)
 
-plotshape( LongCondition and enableLong, title="Calls Label", color=color.new(color.green, 25), textcolor=useTextLabels ? color.white : color.new(color.white, 100), style=useTextLabels ? shape.labelup : shape.triangleup,     text="Calls", location=location.belowbar)     
-plotshape(ShortCondition and enableShort, title="Puts Label", color=color.new(color.red, 25),   textcolor=useTextLabels ? color.white : color.new(color.white, 100), style=useTextLabels ? shape.labeldown : shape.triangledown, text="Puts",  location=location.abovebar)
+plotshape(LongCondition  and enableLong,  title="Calls Label", color=color.new(color.green, 25), textcolor=useTextLabels ? color.white : color.new(color.white, 100), style=useTextLabels ? shape.labelup :  shape.triangleup,     text="Calls", location=location.belowbar)     
+plotshape(ShortCondition and enableShort, title="Puts Label",  color=color.new(color.red, 25),   textcolor=useTextLabels ? color.white : color.new(color.white, 100), style=useTextLabels ? shape.labeldown : shape.triangledown,  text="Puts",  location=location.abovebar)
 
 var float longRiskAmount = na
 var float longTakeProfitPrice1 = na
@@ -118,8 +122,6 @@ var float shortTakeProfitPrice1 = na
 var float shortTakeProfitPrice2 = na
 var float shortTakeProfitPrice3 = na
 var float shortStopLossPrice = na
-
-position_size = strategy.equity
 
 // Define Long entry points
 // strategy.position_size <= 0 for avoiding continous Buy condition
@@ -164,6 +166,14 @@ if ta.change(strategy.position_size) < 0 and ta.change(strategy.closedtrades) > 
         longTakeProfitPrice2 := na
         longTakeProfitPrice3 := na
 
+    if strategy.position_size == 0
+        longRiskAmount := na
+        longStopLossPrice := na
+        longTakeProfitPrice1 := na
+        longTakeProfitPrice2 := na
+        longTakeProfitPrice3 := na
+
+
 longAvgPrice        = plot(longStopLossPrice + longRiskAmount,    "Long AveragePrice", color.green, style = plot.style_circles, offset = 1)
 longStopLossLine    = plot(longStopLossPrice,    "Long SL",  color.red,   style = plot.style_circles, offset = 1)
 longTakeProfitLine1 = plot(longTakeProfitPrice1, "Long TP1", color.green, style = plot.style_circles, offset = 1)
@@ -194,6 +204,9 @@ if inTradeWindow and ShortCondition and enableShort and strategy.position_size >
     longTakeProfitPrice3 := na
     longStopLossPrice := na
 
+    alert("Test", alert.freq_once_per_bar)
+
+
 if ta.change(strategy.position_size) > 0 and ta.change(strategy.closedtrades) > 0
     if high >= shortStopLossPrice
         shortRiskAmount := na
@@ -216,6 +229,13 @@ if ta.change(strategy.position_size) > 0 and ta.change(strategy.closedtrades) > 
         shortTakeProfitPrice2 := na
         shortTakeProfitPrice3 := na
 
+    if strategy.position_size == 0
+        shortRiskAmount := na
+        shortStopLossPrice := na
+        shortTakeProfitPrice1 := na
+        shortTakeProfitPrice2 := na
+        shortTakeProfitPrice3 := na
+
 shortAvgPrice        = plot(shortStopLossPrice - shortRiskAmount,    "Short AveragePrice", color.green, style = plot.style_circles, offset = 1)
 shortStopLossLine    = plot(shortStopLossPrice,    "Short SL",  color.red,   style = plot.style_circles, offset = 1)
 shortTakeProfitLine1 = plot(shortTakeProfitPrice1, "Short TP1", color.green, style = plot.style_circles, offset = 1)
@@ -232,6 +252,9 @@ plotchar(strategy.position_size,            "Debug : strategy.position_size",   
 plotchar(strategy.opentrades,               "Debug : strategy.opentrades",               "", location = location.top)
 plotchar(strategy.closedtrades,             "Debug : strategy.closedtrades",             "", location = location.top)
 plotchar(strategy.equity,                   "Debug : strategy.equity",                   "", location = location.top)
+plotchar(strategy.openprofit,               "Debug : strategy.openprofit",               "", location = location.top)
+plotchar(strategy.netprofit,                "Debug : strategy.netprofit",                "", location = location.top)
+
 plotchar(ta.change(strategy.position_size), "Debug : ta.change(strategy.position_size)", "", location = location.top)
 
 plotchar(longRiskAmount,              "Debug : longRiskAmount",               "", location = location.top)
